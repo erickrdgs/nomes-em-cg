@@ -1,12 +1,3 @@
-#
-# This is the server logic of a Shiny web application. You can run the 
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-# 
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(tidyverse)
 library(here)
@@ -15,29 +6,69 @@ source(here("code/read_wrangle.R"))
 vias = read_wrangle_data()
 
 profissoes_nos_dados = vias %>% 
-  filter(!is.na(profissao)) %>%  
-  pull(profissao) %>% 
-  unique()
+    filter(!is.na(profissao)) %>%  
+    pull(profissao) %>% 
+    unique()
 
-# Define server logic required to draw a histogram
-shinyServer(function(input, output) {
-    prof_selecionada = reactive({input$profissao})
+function(input, output, session) {
+    selectedData <- reactive({
+        if(input$caracter == "Arvores")
+        {
+            carac <- vias$arvore
+            cbind(vias, carac)
+        }else if(input$caracter == "Semaforos")
+        {
+            carac <- vias$semaforo
+            cbind(vias, carac)
+        }else if(input$caracter == "Pontos de taxi")
+        {
+            carac <- vias$pontotaxi
+            cbind(vias, carac)
+        }else if(input$caracter == "Pontos de mototaxi")
+        {
+            carac <- vias$pontomotot
+            cbind(vias, carac)
+        }else if(input$caracter == "Pontos de onibus")
+        {
+            carac <- vias$pontoonibu
+            cbind(vias, carac)
+        }else
+        {
+            carac <- vias$bancos
+        }
+    })
     
     output$distPlot <- renderPlot({
-        vias_profissao = vias %>% filter(profissao == prof_selecionada())
-        vias_profissao %>% 
-            ggplot(aes(x = arvores_100m_mean)) + 
-            geom_histogram(binwidth = 1, 
-                           boundary = 0, 
-                           fill = "darkgreen") + 
-            scale_x_continuous(limits = c(0, 15))
+        selectedData() %>%
+            ggplot(aes(x = comprimento, y = carac)) + 
+            geom_point(alpha = .2, color = "blue", size = 3) +
+            labs(y = input$caracter, x = "comprimento") +
+            ggtitle("Visão geral")  +
+            theme(plot.title = element_text(hjust = 0.5)) +
+            ylim(0, max(selectedData()$carac, na.rm = TRUE))
+    })
+    
+    output$distPlot2 <- renderPlot({
+        selectedData() %>%
+            filter(profissao == input$profissao) %>%
+            ggplot(aes(x = comprimento, y = carac)) + 
+            geom_point(alpha = .2, color = "blue", size = 3) +
+            labs(y = input$caracter, x = "comprimento") +
+            ggtitle("Por profissão") +
+            theme(plot.title = element_text(hjust = 0.5)) +
+            xlim(0, 20000) +
+            ylim(0, max(selectedData()$carac, na.rm = TRUE))
     })
     
     output$listagem <- renderTable({
         vias %>% 
-            filter(profissao == prof_selecionada()) %>% 
-            select(nome = nomelograd, 
-                   comprimento)
+            filter(profissao == input$profissao) %>% 
+            select(nome = nomelograd,
+                   comp = comprimento)
     })
     
-})
+    output$corr <- renderText({
+        correlation <- round(cor(selectedData()$carac, selectedData()$comprimento), 2)
+        paste("Correlação entre as variáveis:", correlation, sep=" ")
+    })
+}

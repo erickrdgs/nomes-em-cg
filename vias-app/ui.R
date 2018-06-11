@@ -8,30 +8,21 @@ profissoes_nos_dados = read_wrangle_data() %>%
     pull(profissao) %>% 
     unique()
 
-
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
-  
-  # Application title
-  titlePanel("Ruas mais arborizadas por profissão"),
-  
-  # Sidebar with a slider input for number of bins 
-  sidebarLayout(
+pageWithSidebar(
+    headerPanel('Pensar em um título'),
     sidebarPanel(
+        selectInput("caracter", 
+                    "Característica", 
+                    FEATURES),
         selectInput("profissao", 
                     "Profissão", 
-                    choices = profissoes_nos_dados), 
-        sliderInput("bins",
-                    "Number of bins:",
-                    min = 1,
-                    max = 50,
-                    value = 30)
+                    profissoes_nos_dados),
+        tableOutput("listagem")
     ),
     
-    # Show a plot of the generated distribution
     mainPanel(
-       plotOutput("distPlot"), 
-       tableOutput("listagem")
+        plotOutput("distPlot"),
+        plotOutput("distPlot2"),
+        textOutput("corr")
     )
-  )
-))
+)

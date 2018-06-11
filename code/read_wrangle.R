@@ -33,6 +33,17 @@ PROFISSOES = frame_data(
     "Desembargador", "judiciário"
 )
 
+FEATURES = frame_data(
+    ~caracteristica,
+    "Arvores",
+    "Bancos",
+    "Pontos de onibus",
+    "Pontos de taxi",
+    "Pontos de mototaxi",
+    "Semaforos",
+    "Faixas de pedestre"
+)
+
 read_wrangle_data <- function(){
     require(tidyverse)
     require(here)
@@ -60,7 +71,7 @@ read_wrangle_data <- function(){
             nomelograd = str_to_title(nomelograd) %>% str_replace_all('\n', ' '),
             profissao = word(nomelograd, 2), # infere do nome da rua
         ) %>% 
-        left_join(PROFISSOES, by = "profissao") %>% 
+        left_join(PROFISSOES, by = "profissao") %>%
         mutate(
             primeiro_nome = case_when(
                 profissao %in% c("Das", "Da", "Do", "Dos", "Identificado", "Projetada", "Proj", "Sem") ~ NA_character_, 
